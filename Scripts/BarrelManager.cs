@@ -10,6 +10,7 @@ public class BarrelManager : MonoBehaviour
 {
     public static List<Barrel> barrels = new List<Barrel>();
 
+    #if UNITY_EDITOR
     void OnDrawGizmos() {
         // print(barrels.Count);
         foreach (Barrel barrel in barrels)
@@ -30,4 +31,5 @@ public class BarrelManager : MonoBehaviour
             // Handles.DrawAAPolyLine(transform.position, barrel.transform.position);
         }
     }
+    #endif
 }
