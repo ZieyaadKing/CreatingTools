@@ -9,8 +9,10 @@ public class Barrel : MonoBehaviour
     public float radius;
     public Color color;
 
+    void OnEnable() => BarrelManager.barrels.Add(this);
+    void OnDisable() => BarrelManager.barrels.Remove(this);
     void OnValidate() => radius = Mathf.Abs(radius);
-    
+
     void OnDrawGizmosSelected() {
         Handles.color = color;
         Handles.DrawWireDisc(transform.position, transform.up, radius);
