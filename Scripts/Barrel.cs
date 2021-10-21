@@ -9,14 +9,13 @@ using UnityEditor;
 [ExecuteAlways]
 public class Barrel : MonoBehaviour
 {
-    public float damage;
-    public float radius;
-    public Color color;
+    static readonly int shPropColor = Shader.PropertyToID("_Color");
+
+    public BarrelType type;
 
     // Setting material color correctly
-    MaterialPropertyBlock mpb;
     // Caching is much more efficient
-    static readonly int shPropColor = Shader.PropertyToID("_Color");
+    MaterialPropertyBlock mpb;
     public MaterialPropertyBlock Mpb 
     {
         get {
@@ -25,21 +24,20 @@ public class Barrel : MonoBehaviour
         }
     }
 
-    void ApplyColor() {
-        MeshRenderer rnd = GetComponent<MeshRenderer>();
-        Mpb.SetColor(shPropColor, color);
-        rnd.SetPropertyBlock(Mpb);
-    }
 
     void OnEnable() => BarrelManager.barrels.Add(this);
     void OnDisable() => BarrelManager.barrels.Remove(this);
-    void OnValidate() {
-        ApplyColor();
-    } 
-
+    void OnValidate() => ApplyColor();
     void OnDrawGizmosSelected() {
-        Handles.color = color;
-        Handles.DrawWireDisc(transform.position, transform.up, radius);
+        Handles.color = type.color;
+        Handles.DrawWireDisc(transform.position, transform.up, type.radius);
         Handles.color = Color.white;
+    }
+
+
+    void ApplyColor() {
+        MeshRenderer rnd = GetComponent<MeshRenderer>();
+        Mpb.SetColor(shPropColor,type.color);
+        rnd.SetPropertyBlock(Mpb);
     }
 }

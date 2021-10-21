@@ -25,7 +25,7 @@ public class BarrelManager : MonoBehaviour
                 barrelPosition, 
                 managerPosition - offset,
                 barrelPosition + offset,
-                barrel.color,
+                barrel.type.color,
                 EditorGUIUtility.whiteTexture,
                 1f);
             // Handles.DrawAAPolyLine(transform.position, barrel.transform.position);
