@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class PropPlacer : EditorWindow
 {
@@ -44,20 +45,53 @@ public class PropPlacer : EditorWindow
         // Enables Undo and Redo
         so.Update();
         EditorGUILayout.PropertyField(propRadius);
+        propRadius.floatValue = propRadius.floatValue.AtLeast(1f);   // Always positive
         EditorGUILayout.PropertyField(propSpawnCount);
+        propSpawnCount.intValue = propSpawnCount.intValue.AtLeast(1);   // Always positive
+
 
         // Any changes made in the editor will immediately be updated
         // in the sceneview
-        if (so.ApplyModifiedProperties()) SceneView.RepaintAll();
+        if (so.ApplyModifiedProperties()) 
+        {
+            GenerateRandomPoints();
+            SceneView.RepaintAll();
+        }
+
+        // if you clicked the left mouse button in the editor window deselect
+        if (Event.current.type == EventType.MouseDown && Event.current.button == 0) {
+            GUI.FocusControl(null);
+            Repaint();  // No delay when clicked
+        }
     }
 
     // Handles everything in the scene view (Props, diagrams, etc)
     void DuringSceneGUI(SceneView sceneView) {
-        if (Event.current.type != EventType.Repaint) return;
+        // if (Event.current.type != EventType.Repaint) return;
 
+        Handles.zTest = CompareFunction.LessEqual;
         Transform cameraTransform = sceneView.camera.transform;
 
-        Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+        // Redraw scene when mouse is moved
+        if (Event.current.type == EventType.MouseMove) {
+            SceneView.RepaintAll();
+        }
+        Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition); 
+
+        bool holdingAlt = (Event.current.modifiers & EventModifiers.Alt) != 0;
+
+        // Change radius when mouse wheel is scrolled and not holding alt
+        if (Event.current.type == EventType.ScrollWheel && !holdingAlt) {
+            float scrollDirection = Mathf.Sign(Event.current.delta.y);
+
+            so.Update();
+            propRadius.floatValue -= scrollDirection * .025f;
+            so.ApplyModifiedProperties();
+            Repaint();
+            Event.current.Use();    // Any other overlapping events after this will not occur
+        }
+        
+        // Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit)) {
 
             // Setting up the tangent space
@@ -68,8 +102,14 @@ public class PropPlacer : EditorWindow
 
             foreach (Vector2 point in randomPoints)
             {
-                Vector3 worldPos = hit.point + (hitTangent * point.x + hitBitangent * point.y) * radius;
-                DrawSphere(worldPos);
+                Vector3 rayOrigin    = hit.point + (hitTangent * point.x + hitBitangent * point.y) * radius;
+                rayOrigin += hitNormal * 2; // Offset
+                Vector3 rayDirection = -hitNormal;
+                Ray     pointRay     = new Ray(rayOrigin, rayDirection);
+                if (Physics.Raycast(pointRay, out RaycastHit pointHit)) {
+                    DrawSphere(pointHit.point);
+                    // Handles.DrawAAPolyLine(pointHit.point, pointHit.point + pointHit.normal );
+                }
             }
 
             // Drawing tanngent space
@@ -89,7 +129,7 @@ public class PropPlacer : EditorWindow
 
     #region Draw Methods
     void DrawSphere(Vector3 pos) {
-        Handles.SphereHandleCap(-1, pos, Quaternion.identity, .1f, EventType.Repaint);
+        Handles.SphereHandleCap(-1, pos, Quaternion.identity, .02f, EventType.Repaint);
     }
     #endregion
     void GenerateRandomPoints() {

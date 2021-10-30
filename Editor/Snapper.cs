@@ -205,4 +205,9 @@ public static class SnapUtils
 
     }
     #endregion
+
+    #region Helper Methods
+    public static float AtLeast(this float v, float min) => Mathf.Max(v, min);
+    public static int AtLeast(this int v, int min) => Mathf.Max(v, min);
+    #endregion
 }
