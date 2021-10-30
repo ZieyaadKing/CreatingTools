@@ -85,7 +85,7 @@ public class PropPlacer : EditorWindow
             float scrollDirection = Mathf.Sign(Event.current.delta.y);
 
             so.Update();
-            propRadius.floatValue -= scrollDirection * .025f;
+            propRadius.floatValue *= 1f + scrollDirection * .05f;
             so.ApplyModifiedProperties();
             Repaint();
             Event.current.Use();    // Any other overlapping events after this will not occur
